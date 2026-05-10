@@ -1,4 +1,7 @@
-"""Tests for the detector module."""
+"""Tests for the detector module.
+
+Requires solc (Slither-dependent). Skipped unless SLOW_TESTS=1.
+"""
 
 import json
 import os
@@ -6,9 +9,11 @@ from pathlib import Path
 
 import pytest
 
-# Skip if SLOW_TESTS not set (Slither tests need solc installed)
 SLOW = os.environ.get("SLOW_TESTS", "0") == "1"
-pytestmark = pytest.mark.skipif(not SLOW, reason="Set SLOW_TESTS=1 to run Slither-dependent tests")
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(not SLOW, reason="Set SLOW_TESTS=1 to run Slither-dependent tests"),
+]
 
 from mantle_audit.detector import DetectionResult, detect_vulnerabilities
 

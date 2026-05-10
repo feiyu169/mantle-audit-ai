@@ -3,42 +3,8 @@
 import json
 from pathlib import Path
 
-import pytest
-
-from mantle_audit.detector import Confidence, DetectionResult, Severity, Vulnerability
+from mantle_audit.detector import DetectionResult
 from mantle_audit.reporter import generate_json_report, generate_markdown_report, save_report
-
-
-@pytest.fixture
-def sample_detection() -> DetectionResult:
-    """Create a sample detection result for testing."""
-    det = DetectionResult()
-    det.vulnerabilities = [
-        Vulnerability(
-            vuln_id="SL-reentrancy-1",
-            check="reentrancy-eth",
-            severity=Severity.HIGH,
-            confidence=Confidence.HIGH,
-            description="Reentrancy vulnerability in withdraw()",
-            file_path="contracts/Token.sol",
-            line_start=42,
-            line_end=58,
-            attack_path="1. Call withdraw()\n2. Re-enter in receive()",
-            recommendation="Use Checks-Effects-Interactions pattern",
-        ),
-        Vulnerability(
-            vuln_id="MANTLE-001",
-            check="Mantle-mETH",
-            severity=Severity.MEDIUM,
-            confidence=Confidence.MEDIUM,
-            description="Contract interacts with mETH without slashing protection",
-            file_path="contracts/Token.sol",
-            line_start=15,
-            line_end=15,
-            is_mantle_specific=True,
-        ),
-    ]
-    return det
 
 
 class TestMarkdownReport:

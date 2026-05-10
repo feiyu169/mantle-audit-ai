@@ -1,13 +1,19 @@
-"""Tests for the parser module."""
+"""Tests for the parser module.
 
+All tests require solc (Slither-dependent). Skipped unless SLOW_TESTS=1.
+"""
+
+import json
 import os
 from pathlib import Path
 
 import pytest
 
-# Skip if SLOW_TESTS not set (Slither tests need solc installed)
 SLOW = os.environ.get("SLOW_TESTS", "0") == "1"
-pytestmark = pytest.mark.skipif(not SLOW, reason="Set SLOW_TESTS=1 to run Slither-dependent tests")
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(not SLOW, reason="Set SLOW_TESTS=1 to run Slither-dependent tests"),
+]
 
 from mantle_audit.parser import ParseResult, parse_contract
 
@@ -82,7 +88,6 @@ class TestParseContract:
         assert "0.8.19" in result.solidity_version
 
     def test_parse_to_json(self, simple_sol: Path):
-        import json
         result = parse_contract(str(simple_sol))
         data = json.loads(result.to_json())
         assert "contracts" in data

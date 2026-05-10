@@ -14,11 +14,14 @@ from pathlib import Path
 import pytest
 
 SLOW = os.environ.get("SLOW_TESTS", "0") == "1"
-pytestmark = pytest.mark.skipif(
-    not SLOW, reason="Set SLOW_TESTS=1 to run end-to-end tests"
-)
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not SLOW, reason="Set SLOW_TESTS=1 to run end-to-end tests"
+    ),
+]
 
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent.parent
 CONTRACTS_DIR = PROJECT_ROOT / "contracts"
 
 

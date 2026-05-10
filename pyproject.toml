@@ -62,4 +62,7 @@ ignore = [
 "src/mantle_audit/reporter.py" = ["RUF001"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests/unit", "tests/integration"]
+markers = [
+    "integration: mark test as integration test (requires solc/slither/network)",
+]

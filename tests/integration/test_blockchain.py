@@ -20,6 +20,8 @@ os.environ.setdefault("ANTHROPIC_API_KEY", "")
 os.environ.setdefault("PINATA_API_KEY", "test_key")
 os.environ.setdefault("PINATA_SECRET_KEY", "test_secret")
 
+pytestmark = pytest.mark.integration
+
 from mantle_audit.blockchain import (
     AUDIT_REGISTRY_ABI,
     record_audit_onchain,

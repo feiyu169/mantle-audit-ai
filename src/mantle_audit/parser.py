@@ -68,10 +68,21 @@ def _extract_function_info(func: SlitherFunction) -> FunctionInfo:
         if hasattr(ir, "function") and ir.function
     ))
 
+    # state_mutability: Slither 0.11.5 may not have this attribute on all function types
+    state_mut = getattr(func, "state_mutability", None)
+    if state_mut is None:
+        # Fallback: infer from boolean flags
+        if getattr(func, "view", False) or getattr(func, "pure", False):
+            state_mut = "view"
+        elif getattr(func, "payable", False):
+            state_mut = "payable"
+        else:
+            state_mut = "nonpayable"
+
     return FunctionInfo(
         name=func.name,
         visibility=str(func.visibility),
-        state_mutability=str(func.state_mutability),
+        state_mutability=str(state_mut),
         parameters=params,
         return_type=returns,
         line_start=func.source_mapping.lines[0] if func.source_mapping.lines else 0,
