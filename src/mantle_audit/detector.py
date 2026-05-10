@@ -141,6 +141,119 @@ _MANTLE_PATTERNS: list[dict] = [
             "Gas price assumptions from L1 may not hold on Mantle."
         ),
     },
+    {
+        "id": "MANTLE-006",
+        "pattern": "delegatecall",
+        "severity": Severity.HIGH,
+        "description": (
+            "Use of delegatecall on Mantle L2. OP Stack delegatecall semantics may differ from L1, "
+            "especially when calling precompiles. Verify storage context and security assumptions."
+        ),
+    },
+    {
+        "id": "MANTLE-007",
+        "pattern": "selfdestruct",
+        "severity": Severity.HIGH,
+        "description": (
+            "Use of selfdestruct — deprecated post-EIP-6780 and may behave differently on Mantle L2. "
+            "Mantle may not fully support selfdestruct semantics; avoid relying on it for state cleanup."
+        ),
+    },
+    {
+        "id": "MANTLE-008",
+        "pattern": "Merchant Moe",
+        "severity": Severity.MEDIUM,
+        "description": (
+            "Contract may interact with Merchant Moe, a Mantle-native DEX. "
+            "Verify slippage protection, twap oracle usage, and liquidity checks are in place."
+        ),
+    },
+    {
+        "id": "MANTLE-008",
+        "pattern": "Agni",
+        "severity": Severity.MEDIUM,
+        "description": (
+            "Contract may interact with Agni Finance, a Mantle-native DEX. "
+            "Verify slippage protection and liquidity validation."
+        ),
+    },
+    {
+        "id": "MANTLE-008",
+        "pattern": "MantleSwap",
+        "severity": Severity.MEDIUM,
+        "description": (
+            "Contract may interact with MantleSwap, a Mantle-native DEX. "
+            "Verify slippage protection and liquidity checks."
+        ),
+    },
+    {
+        "id": "MANTLE-009",
+        "pattern": "L1Block",
+        "severity": Severity.MEDIUM,
+        "description": (
+            "Use of L1Block.number or L1Block.timestamp on Mantle L2. "
+            "These return L1 values which may differ from L2 block context — "
+            "verify that time-sensitive logic accounts for this discrepancy."
+        ),
+    },
+    {
+        "id": "MANTLE-010",
+        "pattern": "ecrecover",
+        "severity": Severity.MEDIUM,
+        "description": (
+            "Use of ecrecover for signature verification on Mantle L2. "
+            "Ensure replay protection across L1/L2 boundaries — signatures valid on L1 "
+            "may also be valid on L2 without proper domain separation."
+        ),
+    },
+    {
+        "id": "MANTLE-011",
+        "pattern": "create2",
+        "severity": Severity.LOW,
+        "description": (
+            "Use of CREATE2 for deterministic deployment on Mantle L2. "
+            "Deployments may collide with L1 addresses due to different chain IDs. "
+            "Verify address determinism assumptions."
+        ),
+    },
+    {
+        "id": "MANTLE-012",
+        "pattern": "0x0000000000000000000000000000000000000100",
+        "severity": Severity.MEDIUM,
+        "description": (
+            "Reference to Mantle custom precompile address (0x...0100). "
+            "Mantle has custom precompiles at different addresses than Ethereum L1. "
+            "Verify the correct precompile address is used."
+        ),
+    },
+    {
+        "id": "MANTLE-013",
+        "pattern": "MNT",
+        "severity": Severity.LOW,
+        "description": (
+            "Reference to MNT (Mantle's native token). Contracts assuming ETH as native "
+            "token may need adaptation for MNT's tokenomics and gas mechanics."
+        ),
+    },
+    {
+        "id": "MANTLE-014",
+        "pattern": "block.basefee",
+        "severity": Severity.LOW,
+        "description": (
+            "Use of block.basefee — EIP-1559 fee mechanics differ on Mantle L2. "
+            "The basefee may not behave identically to L1; gas-dependent logic may need adjustment."
+        ),
+    },
+    {
+        "id": "MANTLE-015",
+        "pattern": "Chainlink",
+        "severity": Severity.HIGH,
+        "description": (
+            "Use of a price oracle (Chainlink or similar) on Mantle L2. "
+            "Oracle latency and L1/L2 price divergence can be exploited. "
+            "Verify staleness checks, deviation thresholds, and that the feed is deployed on Mantle."
+        ),
+    },
 ]
 
 

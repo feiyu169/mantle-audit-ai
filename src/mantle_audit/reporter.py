@@ -21,6 +21,16 @@ def _severity_emoji(severity: Severity) -> str:
     }.get(severity, "❓")
 
 
+def _severity_color(severity: Severity) -> str:
+    return {
+        Severity.CRITICAL: "#ff4444",
+        Severity.HIGH: "#ff8800",
+        Severity.MEDIUM: "#ffcc00",
+        Severity.LOW: "#4488ff",
+        Severity.INFO: "#888888",
+    }.get(severity, "#ffffff")
+
+
 def generate_markdown_report(
     sol_path: str,
     detection: DetectionResult,
@@ -99,8 +109,8 @@ def generate_markdown_report(
         lines.extend([
             "## 链上凭证",
             "",
-            f"| 项目 | 值 |",
-            f"|------|-----|",
+            "| 项目 | 值 |",
+            "|------|-----|",
             f"| IPFS CID | `{chain_info.get('ipfs_cid', 'N/A')}` |",
             f"| 交易哈希 | `{chain_info.get('tx_hash', 'N/A')}` |",
             f"| 审计 ID | `{chain_info.get('audit_id', 'N/A')}` |",
@@ -137,6 +147,247 @@ def generate_json_report(
     if chain_info:
         report["chain"] = chain_info
     return json.dumps(report, indent=2, ensure_ascii=False)
+
+
+def generate_html_report(
+    sol_path: str,
+    detection: DetectionResult,
+    llm_vulns: list | None = None,
+    chain_info: dict | None = None,
+) -> str:
+    """Generate a professional HTML audit report with dark theme and pure-CSS charts."""
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    vulns = llm_vulns if llm_vulns else detection.vulnerabilities
+    summary = detection.summary
+    total = sum(summary.values())
+
+    severity_order = [Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM, Severity.LOW, Severity.INFO]
+    max_count = max(summary.values()) if summary else 1
+
+    # Build severity bar chart HTML (pure CSS)
+    chart_bars = ""
+    for sev in severity_order:
+        count = summary.get(sev.value, 0)
+        pct = (count / max_count * 100) if max_count > 0 else 0
+        color = _severity_color(sev)
+        chart_bars += (
+            f'<div class="chart-row">'
+            f'<div class="chart-label">{sev.value}</div>'
+            f'<div class="chart-bar-bg">'
+            f'<div class="chart-bar" style="width:{pct:.0f}%;background:{color};">{count}</div>'
+            f'</div>'
+            f'</div>\n'
+        )
+
+    # Build summary cards
+    severity_cards = ""
+    for sev in severity_order:
+        count = summary.get(sev.value, 0)
+        color = _severity_color(sev)
+        severity_cards += (
+            f'<div class="sev-card" style="border-left:4px solid {color};">'
+            f'<div class="sev-count">{count}</div>'
+            f'<div class="sev-label">{sev.value}</div>'
+            f'</div>\n'
+        )
+
+    # Build vulnerability list with expandable details
+    vuln_items = ""
+    sort_order = {s: i for i, s in enumerate([Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM, Severity.LOW, Severity.INFO])}
+    sorted_vulns = sorted(vulns, key=lambda v: sort_order.get(v.severity, 5))
+
+    for i, v in enumerate(sorted_vulns, start=1):
+        color = _severity_color(v.severity)
+        mantle_badge = '<span class="mantle-badge">Mantle</span>' if v.is_mantle_specific else ""
+        fp_badge = '<span class="fp-badge">False Positive</span>' if v.is_false_positive else ""
+
+        vuln_items += (
+            f'<details class="vuln-item" style="border-left:4px solid {color};">'
+            f'<summary class="vuln-summary">'
+            f'<span class="vuln-id">{v.vuln_id}</span>'
+            f'<span class="vuln-severity" style="color:{color};">{v.severity.value}</span>'
+            f'{mantle_badge}{fp_badge}'
+            f'<span class="vuln-check">{v.check}</span>'
+            f'</summary>'
+            f'<div class="vuln-details">'
+            f'<div class="vuln-field"><span class="field-label">Location:</span> <code>{v.file_path or "N/A"}:L{v.line_start}</code></div>'
+            f'<div class="vuln-field"><span class="field-label">Confidence:</span> {v.confidence.value}</div>'
+            f'<div class="vuln-field"><span class="field-label">Description:</span><p>{v.description}</p></div>'
+        )
+        if v.attack_path:
+            vuln_items += f'<div class="vuln-field"><span class="field-label">Attack Path:</span><pre>{v.attack_path}</pre></div>'
+        if v.recommendation:
+            escaped_rec = v.recommendation.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            vuln_items += f'<div class="vuln-field"><span class="field-label">Recommendation:</span><pre class="code-block">{escaped_rec}</pre></div>'
+        vuln_items += "</div></details>\n"
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audit Report - {Path(sol_path).name}</title>
+<style>
+  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+  body {{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 40px 20px;
+    max-width: 960px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }}
+  .header {{
+    text-align: center;
+    padding: 30px 0;
+    border-bottom: 1px solid #30363d;
+    margin-bottom: 30px;
+  }}
+  .header h1 {{ font-size: 1.8em; color: #58a6ff; }}
+  .header .subtitle {{ color: #8b949e; font-size: 0.95em; margin-top: 6px; }}
+  .header .file-name {{ color: #7ee787; font-size: 1.1em; }}
+  .summary-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 30px;
+  }}
+  .sev-card {{
+    background: #161b22;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }}
+  .sev-card .sev-count {{ font-size: 2em; font-weight: 700; }}
+  .sev-card .sev-label {{ font-size: 0.85em; color: #8b949e; margin-top: 4px; }}
+  .total-card {{
+    background: #1c2333;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    border-left: 4px solid #58a6ff;
+    margin-bottom: 24px;
+  }}
+  .total-card .sev-count {{ font-size: 2.2em; font-weight: 700; color: #58a6ff; }}
+  .total-card .sev-label {{ font-size: 0.85em; color: #8b949e; }}
+  .section-title {{ font-size: 1.3em; color: #f0f6fc; margin: 30px 0 16px; padding-bottom: 8px; border-bottom: 1px solid #21262d; }}
+  .chart-container {{ background: #161b22; border-radius: 8px; padding: 20px; margin-bottom: 24px; }}
+  .chart-row {{ display: flex; align-items: center; margin-bottom: 8px; }}
+  .chart-label {{ width: 120px; font-size: 0.85em; color: #8b949e; flex-shrink: 0; }}
+  .chart-bar-bg {{ flex: 1; height: 28px; background: #0d1117; border-radius: 4px; overflow: hidden; }}
+  .chart-bar {{ height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 0.8em; font-weight: 600; color: #fff; min-width: 28px; transition: width 0.3s ease; }}
+  .vuln-item {{
+    background: #161b22;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }}
+  .vuln-summary {{
+    padding: 12px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+  }}
+  .vuln-summary::-webkit-details-marker {{ display: none; }}
+  .vuln-summary::before {{ content: '▶'; color: #58a6ff; font-size: 0.8em; transition: transform 0.2s; }}
+  details[open] .vuln-summary::before {{ transform: rotate(90deg); }}
+  .vuln-id {{ font-family: monospace; color: #58a6ff; font-size: 0.9em; min-width: 100px; }}
+  .vuln-severity {{ font-weight: 600; font-size: 0.85em; min-width: 90px; }}
+  .vuln-check {{ color: #8b949e; font-size: 0.9em; }}
+  .mantle-badge {{
+    display: inline-block;
+    background: #1a3a5c;
+    color: #58a6ff;
+    font-size: 0.7em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }}
+  .fp-badge {{
+    display: inline-block;
+    background: #3d1c1c;
+    color: #ff6b6b;
+    font-size: 0.7em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }}
+  .vuln-details {{ padding: 0 16px 16px; }}
+  .vuln-field {{ margin-bottom: 10px; }}
+  .field-label {{ color: #58a6ff; font-weight: 600; font-size: 0.85em; display: block; margin-bottom: 4px; }}
+  .vuln-field p {{ color: #c9d1d9; font-size: 0.92em; }}
+  .vuln-field code {{ background: #0d1117; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em; color: #7ee787; }}
+  .vuln-field pre {{
+    background: #0d1117;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.85em;
+    color: #c9d1d9;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }}
+  .no-vulns {{
+    background: #161b22;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    color: #7ee787;
+    font-size: 1.1em;
+  }}
+  .footer {{
+    text-align: center;
+    padding: 24px 0;
+    margin-top: 30px;
+    border-top: 1px solid #30363d;
+    color: #484f58;
+    font-size: 0.85em;
+  }}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🛡️ Mantle-Audit-AI Report</h1>
+  <div class="subtitle">AI-powered smart contract audit for the Mantle ecosystem</div>
+  <div class="file-name">📄 {Path(sol_path).name}</div>
+</div>
+
+<!-- Summary Cards -->
+<div class="total-card">
+  <div class="sev-count">{total}</div>
+  <div class="sev-label">Total Findings</div>
+</div>
+<div class="summary-grid">
+  {severity_cards}
+</div>
+
+<!-- Severity Distribution Chart -->
+<h2 class="section-title">📊 Severity Distribution</h2>
+<div class="chart-container">
+  {chart_bars}
+</div>
+
+<!-- Vulnerability List -->
+<h2 class="section-title">🔍 Vulnerability Details</h2>
+
+{"<div class='no-vulns'>✅ No vulnerabilities found.</div>" if not vuln_items else vuln_items}
+
+<div class="footer">
+  <p>Generated by Mantle-Audit-AI v0.1.0</p>
+  <p>File: {Path(sol_path).absolute()}</p>
+  <p>Timestamp: {now}</p>
+</div>
+
+</body>
+</html>"""
+    return html
 
 
 def save_report(content: str, output_path: str) -> str:

@@ -117,15 +117,38 @@ def _parse_llm_vulns(raw: str) -> list[Vulnerability]:
         except ValueError:
             confidence = Confidence.MEDIUM
 
+        # Parse code_location: may be "file:line", "line,col", or just "line"
+        loc = item.get("code_location", "")
+        file_path = ""
+        line_num = 0
+        if isinstance(loc, str) and loc:
+            if ":" in loc:
+                parts = loc.split(":", 1)
+                try:
+                    line_num = int(parts[1].split(",")[0].strip())
+                except ValueError:
+                    line_num = 0
+                file_path = parts[0]
+            elif "," in loc:
+                try:
+                    line_num = int(loc.split(",")[0].strip())
+                except ValueError:
+                    line_num = 0
+            else:
+                try:
+                    line_num = int(loc.strip())
+                except ValueError:
+                    line_num = 0
+
         vulns.append(Vulnerability(
             vuln_id=item.get("vuln_id", "LLM-0"),
             check=item.get("check", "LLM-Analysis"),
             severity=severity,
             confidence=confidence,
             description=item.get("description", ""),
-            file_path=item.get("code_location", "").split(":")[0] if ":" in item.get("code_location", "") else "",
-            line_start=int(item.get("code_location", "0:0").split(":")[1]) if ":" in item.get("code_location", "") else 0,
-            line_end=int(item.get("code_location", "0:0").split(":")[1]) if ":" in item.get("code_location", "") else 0,
+            file_path=file_path,
+            line_start=line_num,
+            line_end=line_num,
             recommendation=item.get("recommendation", ""),
             attack_path=item.get("attack_path", ""),
             is_false_positive=item.get("is_false_positive", False),
@@ -155,7 +178,10 @@ def analyze_with_llm(
         result.errors.append(f"Missing config: {', '.join(missing)}")
         return result
 
-    client = anthropic.Anthropic(api_key=Config.ANTHROPIC_API_KEY)
+    client_kwargs = {"api_key": Config.ANTHROPIC_API_KEY}
+    if Config.ANTHROPIC_BASE_URL:
+        client_kwargs["base_url"] = Config.ANTHROPIC_BASE_URL
+    client = anthropic.Anthropic(**client_kwargs)
 
     # Build Slither report summary for the prompt
     slither_summary = []
@@ -179,7 +205,15 @@ def analyze_with_llm(
             system=_SYSTEM_PROMPT,
             messages=[{"role": "user", "content": user_msg}],
         )
-        raw_text = response.content[0].text
+        # Extract text from response (skip ThinkingBlock, find first TextBlock)
+        raw_text = ""
+        for block in response.content:
+            if hasattr(block, "text"):
+                raw_text = block.text
+                break
+        if not raw_text:
+            result.errors.append("LLM returned no text content")
+            return result
         result.raw_response = raw_text
         result.vulnerabilities = _parse_llm_vulns(raw_text)
     except anthropic.APIError as e:

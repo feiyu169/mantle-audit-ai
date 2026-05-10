@@ -17,6 +17,7 @@ class Config:
 
     # LLM
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
+    ANTHROPIC_BASE_URL: str = os.getenv("ANTHROPIC_BASE_URL", "")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "claude-sonnet-4-20250514")
 
     # IPFS (Pinata)

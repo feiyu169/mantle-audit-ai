@@ -17,7 +17,7 @@ contract AuditRegistry {
     }
 
     mapping(bytes32 => AuditRecord) public audits;
-    address[] public auditIds;
+    bytes32[] public auditIds;
     address public owner;
 
     event AuditCompleted(

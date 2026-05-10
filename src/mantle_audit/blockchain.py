@@ -117,7 +117,7 @@ def record_audit_onchain(
     """
     result = OnChainResult(ipfs_cid=ipfs_cid, network="mantle")
 
-    missing = Config.validate(require_chain=True)
+    missing = Config.validate(require_llm=False, require_chain=True)
     if missing:
         result.errors = [f"Missing config: {', '.join(missing)}"]
         return result
@@ -151,7 +151,7 @@ def record_audit_onchain(
             "nonce": nonce,
             "gas": 500000,
             "gasPrice": w3.eth.gas_price,
-            "chainId": 5000,  # Mantle mainnet
+            "chainId": w3.eth.chain_id,  # auto-detect from RPC
         })
 
         # Sign and send

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mantle-Audit-AI — Hackathon Presentation</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --text: #c9d1d9;
+    --heading: #f0f6fc;
+    --accent: #00d4ff;
+    --mantle: #0000ff;
+    --green: #3fb950;
+    --red: #f85149;
+    --orange: #d29922;
+    --yellow: #e3b341;
+    --border: #30363d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── Slides ── */
+  .slide {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    padding: 60px 80px;
+    text-align: center;
+    animation: fadeIn 0.4s ease;
+  }
+  .slide.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  h1 { font-size: 3.2em; color: var(--heading); margin-bottom: 16px; line-height: 1.2; }
+  h2 { font-size: 2.2em; color: var(--accent); margin-bottom: 32px; }
+  h3 { font-size: 1.4em; color: var(--heading); margin-bottom: 12px; }
+  p, li { font-size: 1.2em; line-height: 1.6; }
+  ul { text-align: left; max-width: 800px; }
+  li { margin-bottom: 10px; }
+  .subtitle { font-size: 1.5em; color: var(--accent); margin-bottom: 24px; }
+  .tagline { font-size: 1.1em; color: var(--text); opacity: 0.8; margin-top: 16px; }
+  code {
+    background: var(--card);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.95em;
+  }
+  .accent { color: var(--accent); }
+  .green { color: var(--green); }
+  .red { color: var(--red); }
+  .orange { color: var(--orange); }
+  .mantle-blue { color: var(--mantle); font-weight: bold; }
+
+  /* ── Boxes ── */
+  .box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 32px;
+    margin: 12px;
+    text-align: left;
+    max-width: 900px;
+    width: 100%;
+  }
+  .box-title { color: var(--accent); font-weight: 700; margin-bottom: 12px; font-size: 1.1em; }
+
+  /* ── Grid ── */
+  .grid { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 1000px; }
+  .grid-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    flex: 1 1 280px;
+    max-width: 300px;
+    text-align: left;
+  }
+  .grid-item h3 { font-size: 1.1em; }
+  .grid-item p { font-size: 0.95em; opacity: 0.8; }
+  .grid-item .number { font-size: 2.5em; color: var(--accent); font-weight: 800; }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.95em;
+  }
+  th { color: var(--accent); padding: 8px 12px; border-bottom: 2px solid var(--border); }
+  td { padding: 6px 12px; border-bottom: 1px solid var(--border); }
+  tr:hover { background: rgba(0, 212, 255, 0.05); }
+
+  /* ── Severity badges ── */
+  .sev-high { color: var(--red); font-weight: 600; }
+  .sev-medium { color: var(--orange); font-weight: 600; }
+  .sev-low { color: var(--yellow); font-weight: 600; }
+
+  /* ── ASCII box ── */
+  .ascii-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    font-family: "JetBrains Mono", "Fira Code", monospace;
+    font-size: 0.85em;
+    line-height: 1.5;
+    text-align: left;
+    white-space: pre;
+    max-width: 900px;
+    overflow-x: auto;
+    color: var(--green);
+  }
+
+  /* ── Progress bar ── */
+  #progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+    z-index: 100;
+  }
+
+  /* ── Slide counter ── */
+  #counter {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    color: var(--border);
+    font-size: 0.9em;
+    z-index: 100;
+  }
+
+  /* ── Nav hint ── */
+  #nav-hint {
+    position: fixed;
+    bottom: 20px;
+    left: 30px;
+    color: var(--border);
+    font-size: 0.8em;
+    z-index: 100;
+  }
+
+  /* ── Print ── */
+  @media print {
+    .slide { display: flex !important; page-break-after: always; height: auto; min-height: 100vh; }
+    #progress, #counter, #nav-hint { display: none; }
+    body { background: #fff; color: #000; }
+    h1, h2, h3, .accent, .subtitle { color: #000; }
+    .box, .grid-item, .ascii-box { border-color: #ccc; background: #f5f5f5; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+<div id="counter"></div>
+<div id="nav-hint">← → or click to navigate</div>
+
+<!-- ════════════════════ Slide 1: Title ════════════════════ -->
+<div class="slide active" id="s1">
+  <div style="margin-bottom:24px;">
+    <span style="font-size:3em;">🔍</span>
+  </div>
+  <h1>Mantle-Audit-AI</h1>
+  <p class="subtitle">AI-Powered Smart Contract Audit for Mantle L2</p>
+  <div style="margin:24px 0; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+    <span style="background:var(--mantle);color:#fff;padding:6px 16px;border-radius:20px;font-size:0.9em;">Track 5: AI DevTools</span>
+    <span style="background:var(--card);border:1px solid var(--border);padding:6px 16px;border-radius:20px;font-size:0.9em;">The Turing Test Hackathon 2026</span>
+    <span style="background:var(--card);border:1px solid var(--border);padding:6px 16px;border-radius:20px;font-size:0.9em;">$120,000 Prize Pool</span>
+  </div>
+  <p class="tagline">The Turing Test for Smart Contract Auditing</p>
+</div>
+
+<!-- ════════════════════ Slide 2: Problem ════════════════════ -->
+<div class="slide" id="s2">
+  <h2>🚨 The Problem</h2>
+  <div class="grid">
+    <div class="grid-item">
+      <h3>Slow & Expensive</h3>
+      <p>Manual audits cost $10K-$100K and take weeks. Startups can't afford them.</p>
+    </div>
+    <div class="grid-item">
+      <h3>Generic Tools Miss L2 Risks</h3>
+      <p>Slither, Mythril, and Oyente know nothing about Mantle's cross-domain messaging, mETH staking, or L2 gas mechanics.</p>
+    </div>
+    <div class="grid-item">
+      <h3>No Verification</h3>
+      <p>How do you know an audit report was written by a human or an AI? There's no on-chain proof.</p>
+    </div>
+  </div>
+  <p style="margin-top:32px;opacity:0.6;font-size:1.1em;">$4B+ lost to smart contract exploits in 2022-2025. Most were preventable.</p>
+</div>
+
+<!-- ════════════════════ Slide 3: Solution ════════════════════ -->
+<div class="slide" id="s3">
+  <h2>✅ Our Solution</h2>
+  <div class="grid">
+    <div class="grid-item">
+      <div class="number">15</div>
+      <h3>Mantle-Specific Rules</h3>
+      <p>mETH, RWA tokens, cross-domain bridges, L2 gas, DEX protocols — no other tool has these.</p>
+    </div>
+    <div class="grid-item">
+      <div class="number">AI</div>
+      <h3>Deep Analysis</h3>
+      <p>Claude analyzes Slither results, re-evaluates severity, finds false positives, and writes fix recommendations.</p>
+    </div>
+    <div class="grid-item">
+      <div class="number">⛓️</div>
+      <h3>On-Chain Proof</h3>
+      <p>Audit results recorded on Mantle blockchain via AuditRegistry.sol. IPFS stores full reports. Immutable, verifiable.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════ Slide 4: Architecture ════════════════════ -->
+<div class="slide" id="s4">
+  <h2>🏗️ Architecture</h2>
+  <div class="ascii-box">
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Mantle-Audit-AI Pipeline                      │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   .sol file                                                         │
+│      │                                                              │
+│      ▼                                                              │
+│   ┌──────────┐    ┌──────────────┐    ┌──────────────┐              │
+│   │  Parser   │───▶│   Detector   │───▶│  LLM Agent   │              │
+│   │ (Slither) │    │ (15 Mantle   │    │  (Claude AI) │              │
+│   │          │    │  + Slither)  │    │  Deep Analyze │              │
+│   └──────────┘    └──────────────┘    └──────┬───────┘              │
+│                                              │                      │
+│                   ┌──────────────────────────┤                      │
+│                   ▼                          ▼                      │
+│            ┌─────────────┐         ┌──────────────┐                 │
+│            │  Reporter    │         │  Blockchain  │                 │
+│            │ MD/JSON/HTML │         │ AuditRegistry│                 │
+│            └──────┬──────┘         └──────┬───────┘                 │
+│                   │                       │                          │
+│                   ▼                       ▼                          │
+│            ┌──────────┐          ┌──────────────┐                   │
+│            │   IPFS    │          │ Mantle Chain │                   │
+│            │  (Pinata) │          │  (On-chain)  │                   │
+│            └──────────┘          └──────────────┘                   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘</div>
+</div>
+
+<!-- ════════════════════ Slide 5: Mantle Rules ════════════════════ -->
+<div class="slide" id="s5">
+  <h2>🔧 15 Mantle-Specific Rules</h2>
+  <div class="box" style="overflow-y:auto;max-height:60vh;">
+    <table>
+      <tr><th>ID</th><th>Pattern</th><th>Severity</th><th>Risk</th></tr>
+      <tr><td>001</td><td>mETH</td><td class="sev-medium">Medium</td><td>Staking/slashing risks</td></tr>
+      <tr><td>002</td><td>USDY</td><td class="sev-high">High</td><td>RWA transfer restrictions</td></tr>
+      <tr><td>003</td><td>L2CrossDomainMessenger</td><td class="sev-medium">Medium</td><td>Cross-chain replay</td></tr>
+      <tr><td>004</td><td>block.gaslimit</td><td class="sev-low">Low</td><td>L2 gas differences</td></tr>
+      <tr><td>005</td><td>tx.gasprice</td><td class="sev-low">Low</td><td>L2 fee model</td></tr>
+      <tr><td>006</td><td>delegatecall</td><td class="sev-high">High</td><td>OP Stack semantics</td></tr>
+      <tr><td>007</td><td>selfdestruct</td><td class="sev-high">High</td><td>EIP-6780 deprecated</td></tr>
+      <tr><td>008</td><td>Merchant Moe / Agni</td><td class="sev-medium">Medium</td><td>Mantle DEX risks</td></tr>
+      <tr><td>009</td><td>L1Block</td><td class="sev-medium">Medium</td><td>L1/L2 context mismatch</td></tr>
+      <tr><td>010</td><td>ecrecover</td><td class="sev-medium">Medium</td><td>Cross-domain replay</td></tr>
+      <tr><td>011</td><td>CREATE2</td><td class="sev-low">Low</td><td>Address collision</td></tr>
+      <tr><td>012</td><td>0x...0100 precompile</td><td class="sev-medium">Medium</td><td>Mantle custom precompiles</td></tr>
+      <tr><td>013</td><td>MNT</td><td class="sev-low">Low</td><td>Native token difference</td></tr>
+      <tr><td>014</td><td>block.basefee</td><td class="sev-low">Low</td><td>EIP-1559 on L2</td></tr>
+      <tr><td>015</td><td>Chainlink / oracle</td><td class="sev-high">High</td><td>Oracle manipulation on L2</td></tr>
+    </table>
+  </div>
+  <p style="margin-top:16px;opacity:0.6;">These rules don't exist in any other smart contract audit tool.</p>
+</div>
+
+<!-- ════════════════════ Slide 6: Human vs AI ════════════════════ -->
+<div class="slide" id="s6">
+  <h2>🧪 Human vs AI — The Turing Test</h2>
+  <div class="box">
+    <div class="box-title">How the Benchmark Works</div>
+    <p><strong>Phase 1:</strong> Run Slither-only static analysis → baseline findings</p>
+    <p><strong>Phase 2:</strong> Run Slither + LLM deep analysis → enriched findings</p>
+    <p><strong>Phase 3:</strong> Compare results side-by-side</p>
+  </div>
+  <div class="grid" style="margin-top:20px;">
+    <div class="grid-item">
+      <h3>🔍 Slither-Only</h3>
+      <p>Fast, deterministic, rule-based. Finds common patterns but misses context-dependent vulnerabilities.</p>
+    </div>
+    <div class="grid-item">
+      <h3>🤖 Slither + AI</h3>
+      <p>Understands business logic. Can identify false positives. Writes fix recommendations. Explains attack paths.</p>
+    </div>
+  </div>
+  <p style="margin-top:24px;">
+    <span class="accent">Command:</span> <code>mantle-audit benchmark -f contract.sol</code>
+  </p>
+</div>
+
+<!-- ════════════════════ Slide 7: Live Demo ════════════════════ -->
+<div class="slide" id="s7">
+  <h2>💻 Demo Commands</h2>
+  <div class="ascii-box" style="text-align:left;">
+<span style="color:var(--accent);"># Full audit with AI analysis</span>
+$ mantle-audit audit -f vault.sol -o report.html --format html
+
+<span style="color:var(--accent);"># Quick static scan (no LLM)</span>
+$ mantle-audit audit -f vault.sol --skip-llm --no-onchain
+
+<span style="color:var(--accent);"># CI/CD integration</span>
+$ mantle-audit audit -f vault.sol --ci --fail-on HIGH
+
+<span style="color:var(--accent);"># Human vs AI benchmark</span>
+$ mantle-audit benchmark -f vault.sol -o benchmark.json
+
+<span style="color:var(--accent);"># Parse contract structure</span>
+$ mantle-audit parse vault.sol</div>
+</div>
+
+<!-- ════════════════════ Slide 8: Chain Integration ════════════════════ -->
+<div class="slide" id="s8">
+  <h2>⛓️ On-Chain Integration</h2>
+  <div class="grid">
+    <div class="grid-item">
+      <h3>📄 AuditRegistry.sol</h3>
+      <p>Custom smart contract on Mantle that stores audit records: contract hash, report hash, severity counts, timestamp.</p>
+    </div>
+    <div class="grid-item">
+      <h3>📦 IPFS Storage</h3>
+      <p>Full audit reports stored on IPFS via Pinata. On-chain only stores the hash — efficient and verifiable.</p>
+    </div>
+    <div class="grid-item">
+      <h3>🆔 ERC-8004 Identity</h3>
+      <p>Agent identity registered on Ethereum. Reputation built over time. Verifiable audit history.</p>
+    </div>
+  </div>
+  <div class="box" style="margin-top:20px;text-align:center;">
+    <code>recordAudit(contractHash, reportHash, critical, high, medium, low)</code> → <span class="green">immutable on-chain</span>
+  </div>
+</div>
+
+<!-- ════════════════════ Slide 9: Results ════════════════════ -->
+<div class="slide" id="s9">
+  <h2>📊 Results</h2>
+  <div class="grid">
+    <div class="grid-item"><div class="number">81</div><h3>Tests Passing</h3><p>Comprehensive test coverage across all modules</p></div>
+    <div class="grid-item"><div class="number">15</div><h3>Mantle Rules</h3><p>Unique to this tool — no competitor has these</p></div>
+    <div class="grid-item"><div class="number">3</div><h3>Report Formats</h3><p>Markdown, JSON, HTML — fits any workflow</p></div>
+  </div>
+  <div class="grid" style="margin-top:20px;">
+    <div class="grid-item"><div class="number">5</div><h3>CLI Commands</h3><p>audit, parse, benchmark, deploy, verify</p></div>
+    <div class="grid-item"><div class="number">6</div><h3>Python Modules</h3><p>parser, detector, llm_agent, reporter, blockchain, ipfs</p></div>
+    <div class="grid-item"><div class="number">∞</div><h3>CI/CD Ready</h3><p>--ci flag, --fail-on thresholds, exit codes</p></div>
+  </div>
+</div>
+
+<!-- ════════════════════ Slide 10: What's Next ════════════════════ -->
+<div class="slide" id="s10">
+  <h2>🚀 What's Next</h2>
+  <div class="grid">
+    <div class="grid-item">
+      <h3>🔮 ERC-8004 Agent Identity</h3>
+      <p>Register the AI auditor on Ethereum. Build on-chain reputation over time.</p>
+    </div>
+    <div class="grid-item">
+      <h3>🌊 More Mantle Protocols</h3>
+      <p>Deeper integration with Merchant Moe, Agni Finance, MantleSwap DEX protocols.</p>
+    </div>
+    <div class="grid-item">
+      <h3>🔗 GitHub Action</h3>
+      <p>One-click CI/CD integration. Every PR gets an automatic audit comment.</p>
+    </div>
+  </div>
+  <div style="margin-top:40px;">
+    <h3>🏆 The Vision</h3>
+    <p style="font-size:1.2em;max-width:700px;">Every smart contract deployed on Mantle should have a verifiable, on-chain audit trail — powered by AI, verified by humans.</p>
+  </div>
+  <p style="margin-top:32px;opacity:0.5;">github.com/feiyu169/mantle-audit-ai</p>
+</div>
+
+<!-- ════════════════════ JavaScript ════════════════════ -->
+<script>
+(function() {
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  function show(n) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, total - 1));
+    slides[current].classList.add('active');
+    document.getElementById('counter').textContent = (current + 1) + ' / ' + total;
+    document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(current + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(current - 1); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(total - 1); }
+  });
+
+  document.addEventListener('click', function(e) {
+    if (e.clientX > window.innerWidth / 2) show(current + 1);
+    else show(current - 1);
+  });
+
+  show(0);
+})();
+</script>
+
+</body>
+</html>
