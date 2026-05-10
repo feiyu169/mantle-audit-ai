@@ -118,11 +118,10 @@ def parse_contract(sol_path: str) -> ParseResult:
     for contract in slither.contracts:
         functions = []
         for func in contract.functions:
-            if func.contract_declarer == contract:  # only own functions
-                try:
-                    functions.append(_extract_function_info(func))
-                except Exception:
-                    continue  # skip functions that fail to parse
+            try:
+                functions.append(_extract_function_info(func))
+            except Exception:
+                continue  # skip functions that fail to parse
 
         state_vars = [v.name for v in contract.state_variables]
         modifiers = [m.name for m in contract.modifiers]
