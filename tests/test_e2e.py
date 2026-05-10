@@ -205,7 +205,7 @@ class TestDetectPipeline:
 
         assert not result.errors, f"Detection errors: {result.errors}"
         # Slither should detect reentrancy on the withdraw function
-        all_checks = [v.check for v in result.vulnerabilities]
+        [v.check for v in result.vulnerabilities]
         assert len(result.vulnerabilities) > 0, "Expected vulnerabilities in unsafe contract"
 
     def test_detect_finds_mantle_patterns(self, vulnerable_contract: Path):
@@ -222,7 +222,7 @@ class TestDetectPipeline:
         assert "MANTLE-004" in mantle_ids, "Should detect block.gaslimit"
 
     def test_detect_clean_contract_has_no_high_vulns(self, clean_contract: Path):
-        from mantle_audit.detector import detect_vulnerabilities, Severity
+        from mantle_audit.detector import Severity, detect_vulnerabilities
 
         result = detect_vulnerabilities(str(clean_contract))
         high_or_above = [
@@ -260,11 +260,11 @@ class TestReportPipeline:
     """Generate reports from real detection results."""
 
     def test_markdown_report_from_audit_registry(self, audit_registry_sol: Path):
-        from mantle_audit.parser import parse_contract
         from mantle_audit.detector import detect_vulnerabilities
+        from mantle_audit.parser import parse_contract
         from mantle_audit.reporter import generate_markdown_report
 
-        parse_result = parse_contract(str(audit_registry_sol))
+        parse_contract(str(audit_registry_sol))
         detection = detect_vulnerabilities(str(audit_registry_sol))
         report = generate_markdown_report(str(audit_registry_sol), detection)
 
@@ -288,7 +288,7 @@ class TestReportPipeline:
 
     def test_report_from_vulnerable_contract(self, vulnerable_contract: Path):
         from mantle_audit.detector import detect_vulnerabilities
-        from mantle_audit.reporter import generate_markdown_report, generate_json_report
+        from mantle_audit.reporter import generate_json_report, generate_markdown_report
 
         detection = detect_vulnerabilities(str(vulnerable_contract))
 
@@ -325,11 +325,11 @@ class TestFullPipelineE2E:
     def test_full_pipeline_audit_registry(
         self, audit_registry_sol: Path, tmp_path: Path
     ):
-        from mantle_audit.parser import parse_contract
         from mantle_audit.detector import detect_vulnerabilities
+        from mantle_audit.parser import parse_contract
         from mantle_audit.reporter import (
-            generate_markdown_report,
             generate_json_report,
+            generate_markdown_report,
             save_report,
         )
 
@@ -362,11 +362,11 @@ class TestFullPipelineE2E:
     def test_full_pipeline_vulnerable_contract(
         self, vulnerable_contract: Path, tmp_path: Path
     ):
-        from mantle_audit.parser import parse_contract
         from mantle_audit.detector import detect_vulnerabilities
+        from mantle_audit.parser import parse_contract
         from mantle_audit.reporter import (
-            generate_markdown_report,
             generate_json_report,
+            generate_markdown_report,
             save_report,
         )
 

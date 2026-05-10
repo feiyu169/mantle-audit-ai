@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from pathlib import Path
 
-from web3 import Web3
 from eth_account import Account
+from web3 import Web3
 
 from .config import Config
 

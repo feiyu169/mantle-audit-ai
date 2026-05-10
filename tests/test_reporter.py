@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from mantle_audit.detector import DetectionResult, Vulnerability, Severity, Confidence
-from mantle_audit.reporter import generate_markdown_report, generate_json_report, save_report
+from mantle_audit.detector import Confidence, DetectionResult, Severity, Vulnerability
+from mantle_audit.reporter import generate_json_report, generate_markdown_report, save_report
 
 
 @pytest.fixture

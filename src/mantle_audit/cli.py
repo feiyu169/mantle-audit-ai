@@ -11,15 +11,19 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from .config import Config
-from .parser import parse_contract
-from .detector import detect_vulnerabilities, Severity
-from .llm_agent import analyze_with_llm
-from .reporter import generate_markdown_report, generate_json_report, generate_html_report, save_report
-from .ipfs import upload_report
 from .blockchain import record_audit_onchain
+from .config import Config
+from .detector import Severity, detect_vulnerabilities
+from .ipfs import upload_report
+from .llm_agent import analyze_with_llm
+from .parser import parse_contract
+from .reporter import (
+    generate_html_report,
+    generate_json_report,
+    generate_markdown_report,
+    save_report,
+)
 
 console = Console()
 
@@ -163,7 +167,7 @@ def audit(sol_path: str, output_path: str | None, fmt: str, onchain: bool, ci: b
             console.print(f"\n[red bold]CI FAILED: Found {fail_on}+ vulnerabilities[/red bold]")
             sys.exit(1)
         else:
-            console.print(f"\n[green bold]CI PASSED[/green bold]")
+            console.print("\n[green bold]CI PASSED[/green bold]")
 
 
 @main.command()
@@ -181,7 +185,7 @@ def parse(sol_path: str):
         console.print(f"\n[bold]{c.name}[/bold] ({c.file_path})")
         console.print(f"  Inherits: {', '.join(c.inherits) or 'none'}")
         console.print(f"  State vars: {', '.join(c.state_variables) or 'none'}")
-        console.print(f"  Functions:")
+        console.print("  Functions:")
         for f in c.functions:
             console.print(f"    {f.visibility} {f.state_mutability} {f.name}({', '.join(f.parameters)}) → {', '.join(f.return_type) or 'void'} [L{f.line_start}]")
 

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 import anthropic
 
 from .config import Config
-from .detector import DetectionResult, Vulnerability, Severity, Confidence
+from .detector import Confidence, DetectionResult, Severity, Vulnerability
 
 _SYSTEM_PROMPT = """\
 You are a senior smart contract security auditor specializing in Solidity and the Mantle L2 ecosystem.

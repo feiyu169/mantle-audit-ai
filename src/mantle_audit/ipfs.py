@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import requests
 
 from .config import Config
-
 
 PINATA_PIN_FILE_URL = "https://api.pinata.cloud/pinning/pinFileToIPFS"
 PINATA_PIN_JSON_URL = "https://api.pinata.cloud/pinning/pinJSONToIPFS"

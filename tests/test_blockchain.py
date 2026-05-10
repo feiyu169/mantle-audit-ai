@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import json
 import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, PropertyMock
-from pathlib import Path
 
 # Set test env vars before importing
 os.environ.setdefault("MANTLE_RPC_URL", "http://localhost:8545")
@@ -21,14 +21,12 @@ os.environ.setdefault("PINATA_API_KEY", "test_key")
 os.environ.setdefault("PINATA_SECRET_KEY", "test_secret")
 
 from mantle_audit.blockchain import (
+    AUDIT_REGISTRY_ABI,
     record_audit_onchain,
     verify_audit_onchain,
-    OnChainResult,
-    AUDIT_REGISTRY_ABI,
 )
-from mantle_audit.ipfs import upload_json, upload_file, upload_report, get_ipfs_url
 from mantle_audit.config import Config
-
+from mantle_audit.ipfs import get_ipfs_url, upload_file, upload_json, upload_report
 
 # ── IPFS Tests ────────────────────────────────────────────────────
 
@@ -250,7 +248,7 @@ class TestABI:
         assert "AuditCompleted" in event_names
 
     def test_record_audit_params(self):
-        record_func = [item for item in AUDIT_REGISTRY_ABI if item.get("name") == "recordAudit"][0]
+        record_func = next(item for item in AUDIT_REGISTRY_ABI if item.get("name") == "recordAudit")
         param_names = [p["name"] for p in record_func["inputs"]]
         assert "contractHash" in param_names
         assert "reportHash" in param_names
@@ -266,9 +264,9 @@ class TestFullPipelineE2E:
     """End-to-end: parse → detect → report → IPFS → on-chain (all mocked)."""
 
     def test_full_pipeline(self, tmp_path):
-        from mantle_audit.parser import parse_contract
         from mantle_audit.detector import detect_vulnerabilities
-        from mantle_audit.reporter import generate_markdown_report, generate_json_report
+        from mantle_audit.parser import parse_contract
+        from mantle_audit.reporter import generate_json_report, generate_markdown_report
 
         # Create a vulnerable test contract
         code = '''

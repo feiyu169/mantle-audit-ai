@@ -1,9 +1,7 @@
 """Tests for Mantle-specific pattern detection (no solc needed)."""
 
-import json
-from pathlib import Path
 
-from mantle_audit.detector import _check_mantle_patterns, _MANTLE_PATTERNS
+from mantle_audit.detector import _MANTLE_PATTERNS, _check_mantle_patterns
 
 
 class TestMantlePatterns:

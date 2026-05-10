@@ -1,7 +1,7 @@
 """Tests for the detector module."""
 
-import os
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -10,7 +10,7 @@ import pytest
 SLOW = os.environ.get("SLOW_TESTS", "0") == "1"
 pytestmark = pytest.mark.skipif(not SLOW, reason="Set SLOW_TESTS=1 to run Slither-dependent tests")
 
-from mantle_audit.detector import detect_vulnerabilities, DetectionResult, Severity
+from mantle_audit.detector import DetectionResult, detect_vulnerabilities
 
 
 @pytest.fixture

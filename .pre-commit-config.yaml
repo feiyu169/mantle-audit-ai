@@ -1,0 +1,30 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: Ruff Lint
+        entry: .venv/bin/ruff check
+        language: system
+        types: [python]
+        pass_filenames: true
+
+      - id: ruff-format
+        name: Ruff Format
+        entry: .venv/bin/ruff format --check
+        language: system
+        types: [python]
+        pass_filenames: true
+
+      - id: validate-enums
+        name: Validate Enums
+        entry: .venv/bin/python scripts/validate_enums.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: pytest-fast
+        name: Pytest (fast)
+        entry: .venv/bin/python -m pytest tests/ -q --tb=line -x
+        language: system
+        pass_filenames: false
+        always_run: true

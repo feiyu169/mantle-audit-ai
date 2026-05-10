@@ -1,14 +1,15 @@
 """Tests for the parser module."""
 
 import os
-import pytest
 from pathlib import Path
+
+import pytest
 
 # Skip if SLOW_TESTS not set (Slither tests need solc installed)
 SLOW = os.environ.get("SLOW_TESTS", "0") == "1"
 pytestmark = pytest.mark.skipif(not SLOW, reason="Set SLOW_TESTS=1 to run Slither-dependent tests")
 
-from mantle_audit.parser import parse_contract, ParseResult
+from mantle_audit.parser import ParseResult, parse_contract
 
 
 @pytest.fixture

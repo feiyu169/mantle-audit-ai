@@ -39,7 +39,27 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+select = ["E", "F", "I", "W", "SIM", "PL", "RUF", "B", "N"]
+ignore = [
+    "PLR2004",  # magic values OK in assertions
+    "E501",     # line-too-long (formatter handles this)
+    "PLR0912",  # too-many-branches
+    "PLR0913",  # too-many-arguments
+    "PLR0915",  # too-many-statements
+    "SIM212",   # if-expr-with-twisted-arms
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "PLC0415",  # import-outside-top-level (test fixtures)
+    "PLW1510",  # subprocess-run-without-check
+    "SIM117",   # multiple-with-statements
+    "E402",     # module-import-not-at-top (after pytestmark)
+]
+
+# Unicode emoji in CLI/reporter output is intentional
+"src/mantle_audit/cli.py" = ["RUF001"]
+"src/mantle_audit/reporter.py" = ["RUF001"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
